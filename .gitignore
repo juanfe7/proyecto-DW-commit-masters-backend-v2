@@ -1,0 +1,16 @@
+# Ignora node_modules
+node_modules/
+
+# Claves privadas
+src/config/firebaseKey.json
+
+# Archivos de entorno
+.env
+
+# Archivos de logs y del sistema
+*.log
+npm-debug.log*
+.DS_Store
+
+# Archivos generados por VSC
+.vscode/
