@@ -1,57 +1,42 @@
 const { db } = require('../config/firebase');
 
 
-
 // ✅ Endpoint con filtros por categoría, location y precio
 const obtainProducts = async (req, res) => {
   try {
-    const { location, category, minPrice, maxPrice, name } = req.query;
-    let query = db.collection('products');
+    const { category, minPrice, maxPrice, name, location } = req.query;
+    let productsRef = db.collection('products');
 
-    // Filtrar por nombre si se proporciona
-    if (name) {
-      query = query.where('name', '>=', name).where('name', '<', name + '\uf8ff');
-    }
-
-    // Filtrar por ubicación si se proporciona
-    if (location) {
-      query = query.where('location', '==', location);
-    }
-
-    // Filtrar por categoría si se proporciona
+    // Filtrar por categoría
     if (category) {
-      query = query.where('category', '==', category);
+      productsRef = productsRef.where('category', '==', category);
     }
 
-    // Filtrar por precio mínimo si se proporciona
+    // Filtrar por precio (rango)
     if (minPrice) {
-      const minPriceNum = parseInt(minPrice);
-      if (!isNaN(minPriceNum)) {
-        query = query.where('price', '>=', minPriceNum);
-      }
+      productsRef = productsRef.where('price', '>=', Number(minPrice));
     }
-
-    // Filtrar por precio máximo si se proporciona
     if (maxPrice) {
-      const maxPriceNum = parseInt(maxPrice);
-      if (!isNaN(maxPriceNum)) {
-        query = query.where('price', '<=', maxPriceNum);
-      }
+      productsRef = productsRef.where('price', '<=', Number(maxPrice));
     }
 
-    const snapshot = await query.get();
-
-    if (snapshot.empty) {
-      return res.status(200).json([]); // No se encontraron productos con los filtros
+    // Filtrar por nombre (búsqueda parcial - requiere indexación en Firestore)
+    if (name) {
+      productsRef = productsRef.where('name', '>=', name).where('name', '<=', name + '\uf8ff');
     }
 
-    const products = [];
-    snapshot.forEach(doc => {
-      products.push({ docId: doc.id, ...doc.data() });
-    });
+    // Filtrar por ubicación
+    if (location) {
+      productsRef = productsRef.where('location', '==', location);
+    }
+
+    const snapshot = await productsRef.get();
+    const products = snapshot.docs.map(doc => ({
+      docId: doc.id,
+      ...doc.data()
+    }));
 
     res.json(products);
-
   } catch (error) {
     console.error('Error al obtener productos con filtros:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -69,7 +54,14 @@ const createProduct = async (req, res) => {
   }
 
   try {
+    // Obtener todos los productos para calcular el siguiente ID
+    const snapshot = await db.collection('products').get();
+    const allProducts = snapshot.docs.map(doc => doc.data());
+    const maxId = Math.max(...allProducts.map(p => p.id || 0), 0);
+    const nextId = maxId + 1;
+
     const newProduct = {
+      id: nextId, // 👈 ID numérico secuencial
       name,
       price,
       stock,
@@ -80,18 +72,102 @@ const createProduct = async (req, res) => {
 
     const docRef = await db.collection('products').add(newProduct);
 
-    res.status(201).json({ message: 'Producto agregado', id: docRef.id });
+    res.status(201).json({ message: 'Producto creado', id: docRef.id });
   } catch (error) {
-    console.error('Error al agregar producto:', error);
+    console.error('Error al crear producto:', error);
+    res.status(500).json({ error: 'Error al crear producto' });
+  }
+};
+
+
+
+// Obtener producto por ID
+const getProductById = async (req, res) => {
+  const { id } = req.params; // El 'id' que viene en la URL
+
+  try {
+    // Convertir el id del parámetro a número para la búsqueda
+    const productIdToFind = parseInt(id);
+
+    const snapshot = await db.collection('products')
+      .where('id', '==', productIdToFind)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ message: 'Producto no encontrado' });
+    }
+
+    // Si la consulta devuelve resultados (debería ser solo uno si 'id' es único)
+    snapshot.forEach(doc => {
+      const product = { docId: doc.id, ...doc.data() };
+      res.json(product); // Respondemos con el producto encontrado
+    });
+
+  } catch (error) {
+    console.error('Error al obtener producto:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
 
-const getProductById = (req, res) => {
-  const id = parseInt(req.params.id)
-  const product = products.find(p => p.id === id)
-  if (!product) return res.status(404).json({ message: 'No encontrado' })
-  res.json(product)
-}
 
-module.exports = { obtainProducts, createProduct, getProductById }
+const updateProduct = async (req, res) => {
+  const { id } = req.params; // El 'id' que viene en la URL
+  const updates = req.body; // Los campos a actualizar vendrán en el cuerpo de la petición
+
+  try {
+    // Convertir el id del parámetro a número para la búsqueda
+    const productIdToFind = parseInt(id);
+
+    const snapshot = await db.collection('products')
+      .where('id', '==', productIdToFind)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ message: 'Producto no encontrado' });
+    }
+
+    // Si la consulta devuelve resultados (debería ser solo uno si 'id' es único)
+    snapshot.forEach(async doc => {
+      await db.collection('products').doc(doc.id).update(updates);
+      const updatedDoc = await db.collection('products').doc(doc.id).get();
+      const updatedProduct = { docId: updatedDoc.id, ...updatedDoc.data() };
+      res.json(updatedProduct); // Respondemos con el producto actualizado
+    });
+
+  } catch (error) {
+    console.error('Error al editar producto:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+// eliminar producto
+const deleteProduct = async (req, res) => {
+  const { id } = req.params; // El 'id' que viene en la URL
+
+  try {
+    // Convertir el id del parámetro a número para la búsqueda
+    const productIdToFind = parseInt(id);
+
+    const snapshot = await db.collection('products')
+      .where('id', '==', productIdToFind)
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ message: 'Producto no encontrado' });
+    }
+
+    // Si la consulta devuelve resultados (debería ser solo uno si 'id' es único)
+    snapshot.forEach(async doc => {
+      await db.collection('products').doc(doc.id).delete();
+      res.json({ message: 'Producto eliminado' }); // Respondemos con un mensaje de éxito
+    });
+
+  } catch (error) {
+    console.error('Error al eliminar producto:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+
+
+module.exports = { obtainProducts, createProduct, getProductById, updateProduct, deleteProduct };
