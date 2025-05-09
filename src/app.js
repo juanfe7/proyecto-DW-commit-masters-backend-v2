@@ -3,6 +3,7 @@ const cors = require('cors');
 const app = express();
 const productsRoutes = require('./routes/products.routes');
 const loginRoutes = require('./routes/login.routes');
+const serverless = require('serverless-http')
 
 // Cargar .env solo en desarrollo local
 if (process.env.NODE_ENV !== 'production') {
@@ -31,4 +32,4 @@ app.use((err, req, res, next) => {
 
 
 // Exportar la app para que Vercel la use como función serverless
-module.exports = app;
+module.exports = serverless(app); // al final del archivo
