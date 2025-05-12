@@ -23,7 +23,7 @@ const login = async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ error: 'El usuario o contraseña es incorrecto' });
 
-    const payload = { id: user.id, rol: user.rol, email: user.email, name: user.name };
+    const payload = { id: user.id, rol: user.role, email: user.email, name: user.name };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token, rol: user.rol, name: user.name });
