@@ -14,14 +14,14 @@ const login = async (req, res) => {
     const snapshot = await db.collection('users').where('email', '==', email).get();
 
     if (snapshot.empty) {
-      return res.status(401).json({ error: 'El usuario no fue encontrado' });
+      return res.status(401).json({ error: 'El usuario o contraseña es incorrecto' });
     }
 
     const doc = snapshot.docs[0];
     const user = doc.data();
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(401).json({ error: 'Contraseña incorrecta' });
+    if (!match) return res.status(401).json({ error: 'El usuario o contraseña es incorrecto' });
 
     const payload = { id: user.id, rol: user.rol, email: user.email, name: user.name };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
