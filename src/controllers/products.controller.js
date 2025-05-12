@@ -47,9 +47,9 @@ const obtainProducts = async (req, res) => {
 
 // Agregar producto
 const createProduct = async (req, res) => {
-  const { name, price, stock, category, location, imageUrl } = req.body;
+  const { name, price, stock, category, location, image } = req.body;
 
-  if (!name || !price || !stock || !category || !location || !imageUrl) {
+  if (!name || !price || !stock || !category || !location || !image) {
     return res.status(400).json({ message: 'Faltan campos del producto' });
   }
 
@@ -67,7 +67,7 @@ const createProduct = async (req, res) => {
       stock,
       category,
       location,
-      imageUrl
+      image
     };
 
     const docRef = await db.collection('products').add(newProduct);
@@ -167,6 +167,9 @@ const deleteProduct = async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
+
+
+
 
 
 

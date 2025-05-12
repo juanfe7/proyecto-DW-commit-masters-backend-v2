@@ -8,6 +8,7 @@ const cors = require('cors');
 const app = express();
 const productsRoutes = require('./routes/products.routes');
 const loginRoutes = require('./routes/login.routes');
+const ordersRoutes = require('./routes/orders.routes');
 
 
 
@@ -29,6 +30,7 @@ app.get('/', (req, res) => {
 // Rutas
 app.use('/api/products', productsRoutes);
 app.use('/api/login', loginRoutes);
+app.use('/api/orders', ordersRoutes);
 
 // Middleware global de manejo de errores
 app.use((err, req, res, next) => {
