@@ -24,9 +24,9 @@ const login = async (req, res) => {
     if (!match) return res.status(401).json({ error: 'El usuario o contraseña es incorrecto' });
 
     const payload = { id: user.id, rol: user.rol, email: user.email, name: user.name };
-    const token = jwt.sign({ id: user.id, role: user.rol, name: user.name }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id, role: user.rol, name: user.name, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    res.json({ token, rol: user.rol, name: user.name });
+    res.json({ id: user.id, token, rol: user.rol, name: user.name, email: user.email });
   } catch (error) {
     console.error('Error en login:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
