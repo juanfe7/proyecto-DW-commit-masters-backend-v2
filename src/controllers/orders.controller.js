@@ -86,7 +86,7 @@ const createOrder = async (req, res) => {
     // Ejecutar batch
     await batch.commit();
 
-    res.status(201).json({ message: 'Orden creada con éxito', orderId: orderRef.id });
+    res.status(201).json({ message: 'Orden creada con éxito', id: orderRef.id });
   } catch (error) {
     console.error('Error al crear orden:', error);
     res.status(500).json({ message: 'Error al procesar la orden' });
@@ -116,6 +116,7 @@ const getOrderStatus = async (req, res) => {
     return res.status(500).json({ message: 'Error del servidor' });
   }
 };
+
 
 const getOrders = async (req, res) => {
   const { email } = req.user;
