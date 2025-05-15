@@ -1,5 +1,5 @@
 # Ignora node_modules
-node_modules/
+node_modules
 
 # Claves privadas
 src/config/firebaseKey.json

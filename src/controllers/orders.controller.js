@@ -68,6 +68,9 @@ const createOrder = async (req, res) => {
     const userRef = db.collection('users').doc(userDoc.id);
     batch.update(userRef, { salary: userData.salary - total });
 
+    const orderRef = db.collection('orders').doc();
+    const orderId = orderRef.id;
+
     // Crear orden
     const newOrder = {
       email,
@@ -78,7 +81,6 @@ const createOrder = async (req, res) => {
       name
     };
 
-    const orderRef = db.collection('orders').doc();
     batch.set(orderRef, newOrder);
 
     // Ejecutar batch
@@ -92,4 +94,50 @@ const createOrder = async (req, res) => {
 };
 
 
-module.exports = {createOrder};
+const getOrderStatus = async (req, res) => {
+  const orderId = req.params.id;
+
+  if (!orderId || orderId.trim() === '') {
+    return res.status(400).json({ message: 'ID de orden inválido' });
+  }
+
+  try {
+    const orderRef = db.collection('orders').doc(orderId);
+    const orderSnap = await orderRef.get();
+
+    if (!orderSnap.exists) {
+      return res.status(404).json({ message: 'Orden no encontrada' });
+    }
+
+    const data = orderSnap.data();
+    return res.status(200).json({ status: data.status });
+  } catch (error) {
+    console.error('Error al obtener estado de orden:', error);
+    return res.status(500).json({ message: 'Error del servidor' });
+  }
+};
+
+const getOrders = async (req, res) => {
+  const { email } = req.user;
+
+  try {
+    const ordersSnapshot = await db.collection('orders').where('email', '==', email).get();
+
+    if (ordersSnapshot.empty) {
+      return res.status(404).json({ message: 'No se encontraron órdenes' });
+    }
+
+    const orders = ordersSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    return res.status(200).json(orders);
+  } catch (error) {
+    console.error('Error al obtener órdenes:', error);
+    return res.status(500).json({ message: 'Error del servidor' });
+  }
+}
+
+
+module.exports = {createOrder, getOrderStatus, getOrders};
