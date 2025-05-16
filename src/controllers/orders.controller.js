@@ -141,4 +141,31 @@ const getOrders = async (req, res) => {
 }
 
 
-module.exports = {createOrder, getOrderStatus, getOrders};
+const getOrderHistory = async (req, res) => {
+  const { email } = req.user;
+
+  try {
+    const ordersSnapshot = await db.collection('orders')
+      .where('email', '==', email)
+      .orderBy('createdAt', 'desc') 
+      .get();
+
+    if (ordersSnapshot.empty) {
+      return res.status(404).json({ message: 'No se encontraron órdenes anteriores' });
+    }
+
+    const history = ordersSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    return res.status(200).json(history);
+  } catch (error) {
+    console.error('Error al obtener historial de pedidos:', error);
+    return res.status(500).json({ message: 'Error del servidor al obtener historial' });
+  }
+};
+
+
+
+module.exports = {createOrder, getOrderStatus, getOrders, getOrderHistory};
