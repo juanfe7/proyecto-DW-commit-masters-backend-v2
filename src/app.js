@@ -9,6 +9,7 @@ const app = express();
 const productsRoutes = require('./routes/products.routes');
 const loginRoutes = require('./routes/login.routes');
 const ordersRoutes = require('./routes/orders.routes');
+const reviewsRoutes = require('./routes/reviews.routes');
 
 
 
@@ -21,16 +22,17 @@ console.log('FIREBASE_PRIVATE_KEY (primeros 20 chars):', process.env.FIREBASE_PR
 app.use(cors());
 app.use(express.json());
 
-// Ruta base para probar funcionamiento
+// ruta base 
 app.get('/', (req, res) => {
   console.log('✅ Entró a /');
   res.send('Servidor funcionando');
 });
 
-// Rutas
+// rutas
 app.use('/api/products', productsRoutes);
 app.use('/api/login', loginRoutes);
 app.use('/api/orders', ordersRoutes);
+app.use('/api/reviews', reviewsRoutes);
 
 // Middleware global de manejo de errores
 app.use((err, req, res, next) => {
