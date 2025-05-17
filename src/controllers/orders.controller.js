@@ -203,6 +203,32 @@ const getOrderHistory = async (req, res) => {
   }
 };
 
+const getAllOrdersForPOS = async (req, res) => {
+  const { status } = req.query;
+
+  try {
+    let query = db.collection('orders');
+
+    if (status) {
+      query = query.where('status', '==', status);
+    }
+
+    query = query.orderBy('createdAt', 'desc');
+
+    const snapshot = await query.get();
+    const orders = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    return res.status(200).json(orders);
+  } catch (error) {
+    console.error('Error al obtener órdenes para POS:', error);
+    return res.status(500).json({ message: 'Error del servidor' });
+  }
+};
 
 
-module.exports = {createOrder, getOrderStatus, getOrders, getOrderHistory, updateOrderStatus};
+
+
+module.exports = {createOrder, getOrderStatus, getOrders, getOrderHistory, updateOrderStatus, getAllOrdersForPOS};
