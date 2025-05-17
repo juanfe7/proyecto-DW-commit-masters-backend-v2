@@ -75,7 +75,7 @@ const createOrder = async (req, res) => {
     const newOrder = {
       email,
       products: detailedProducts,
-      status: 'pendiente',
+      status: 'en confirmacion',
       total,
       createdAt: new Date(),
       name
@@ -120,9 +120,19 @@ const getOrderStatus = async (req, res) => {
 
 const getOrders = async (req, res) => {
   const { email } = req.user;
+  const { status } = req.query;
 
   try {
-    const ordersSnapshot = await db.collection('orders').where('email', '==', email).get();
+    let query = db.collection('orders').where('email', '==', email);
+
+    query = query.orderBy('createdAt', 'desc');
+
+    // Si se especificó el estado, agregarlo a la consulta
+    if (status) {
+      query = query.where('status', '==', status);
+    }
+
+    const ordersSnapshot = await query.get();
 
     if (ordersSnapshot.empty) {
       return res.status(404).json({ message: 'No se encontraron órdenes' });
@@ -138,7 +148,34 @@ const getOrders = async (req, res) => {
     console.error('Error al obtener órdenes:', error);
     return res.status(500).json({ message: 'Error del servidor' });
   }
-}
+};
+
+
+
+const updateOrderStatus = async (req, res) => {
+  const orderId = req.params.id;
+  const { status } = req.body;
+
+  if (!status) {
+    return res.status(400).json({ message: 'Falta el nuevo estado de la orden' });
+  }
+
+  try {
+    const orderRef = db.collection('orders').doc(orderId);
+    const orderSnap = await orderRef.get();
+
+    if (!orderSnap.exists) {
+      return res.status(404).json({ message: 'Orden no encontrada' });
+    }
+
+    await orderRef.update({ status });
+
+    return res.status(200).json({ message: 'Estado de la orden actualizado con éxito' });
+  } catch (error) {
+    console.error('Error al actualizar el estado:', error);
+    return res.status(500).json({ message: 'Error del servidor' });
+  }
+};
 
 
 const getOrderHistory = async (req, res) => {
@@ -168,4 +205,4 @@ const getOrderHistory = async (req, res) => {
 
 
 
-module.exports = {createOrder, getOrderStatus, getOrders, getOrderHistory};
+module.exports = {createOrder, getOrderStatus, getOrders, getOrderHistory, updateOrderStatus};
