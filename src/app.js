@@ -10,6 +10,7 @@ const productsRoutes = require('./routes/products.routes');
 const loginRoutes = require('./routes/login.routes');
 const ordersRoutes = require('./routes/orders.routes');
 const reviewsRoutes = require('./routes/reviews.routes');
+const notificationsRoutes = require('./routes/notifications.routes');
 
 
 
@@ -33,6 +34,7 @@ app.use('/api/products', productsRoutes);
 app.use('/api/login', loginRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/reviews', reviewsRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Middleware global de manejo de errores
 app.use((err, req, res, next) => {

@@ -198,14 +198,27 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: 'Orden no encontrada' });
     }
 
+    // Obtener los datos de la orden
+    const orderData = orderSnap.data();
+
+    // Actualizar el estado
     await orderRef.update({ status });
 
-    return res.status(200).json({ message: 'Estado de la orden actualizado con éxito' });
+    // Crear la notificación
+    await db.collection('notifications').add({
+      email: orderData.email || 'cliente@desconocido.com',
+      message: `Tu pedido ha sido actualizado a: ${status}`,
+      read: false,
+      createdAt: new Date().toISOString(),
+    });
+
+    return res.status(200).json({ message: 'Estado de la orden actualizado con éxito y notificación enviada' });
   } catch (error) {
     console.error('Error al actualizar el estado:', error);
     return res.status(500).json({ message: 'Error del servidor' });
   }
 };
+
 
 
 const getOrderHistory = async (req, res) => {
