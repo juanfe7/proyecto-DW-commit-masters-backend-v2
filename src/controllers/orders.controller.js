@@ -94,6 +94,36 @@ const createOrder = async (req, res) => {
 };
 
 
+const getAllOrders = async (req, res) => {
+  const { status } = req.query;
+
+  try {
+    let query = db.collection('orders').orderBy('createdAt', 'desc');
+
+    if (status) {
+      query = query.where('status', '==', status);
+    }
+
+    const snapshot = await query.get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ message: 'No se encontraron órdenes' });
+    }
+
+    const orders = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    return res.status(200).json(orders);
+  } catch (error) {
+    console.error('Error al obtener todas las órdenes:', error);
+    return res.status(500).json({ message: 'Error del servidor' });
+  }
+};
+
+
+
 const getOrderStatus = async (req, res) => {
   const orderId = req.params.id;
 
@@ -207,4 +237,4 @@ const getOrderHistory = async (req, res) => {
 
 
 
-module.exports = {createOrder, getOrderStatus, getOrders, getOrderHistory, updateOrderStatus};
+module.exports = {createOrder, getOrderStatus, getOrders, getOrderHistory, updateOrderStatus, getAllOrders};
