@@ -43,4 +43,71 @@ const createReview = async (req, res) => {
   }
 };
 
-module.exports = { createReview };
+
+const getReviewsByProduct = async (req, res) => {
+  try {
+    const { docId } = req.params;
+
+    if (!docId) {
+      return res.status(400).json({ message: 'Se requiere el ID del producto' });
+    }
+
+    const snapshot = await db.collection('reviews')
+      .where('docId', '==', docId)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    const reviews = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    res.status(200).json(reviews);
+  } catch (error) {
+    console.error('Error al obtener reseñas:', error);
+    res.status(500).json({ message: 'Error al obtener reseñas' });
+  }
+};
+
+const getAllReviews = async (req, res) => {
+  try {
+    const snapshot = await db.collection('reviews').orderBy('createdAt', 'desc').get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ message: 'No se encontraron reseñas' });
+    }
+
+    const reviews = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    return res.status(200).json(reviews);
+  } catch (error) {
+    console.error('Error al obtener todas las reseñas:', error);
+    return res.status(500).json({ message: 'Error del servidor' });
+  }
+}
+
+
+const deleteReview = async (req, res) => {
+  const { docId } = req.params;
+
+  try {
+    const reviewRef = db.collection('reviews').doc(docId);
+    const reviewSnap = await reviewRef.get();
+
+    if (!reviewSnap.exists) {
+      return res.status(404).json({ message: 'Reseña no encontrada' });
+    }
+
+    await reviewRef.delete();
+    return res.status(200).json({ message: 'Reseña eliminada con éxito' });
+  } catch (error) {
+    console.error('Error al eliminar reseña:', error);
+    return res.status(500).json({ message: 'Error del servidor' });
+  }
+};
+
+
+module.exports = { createReview, getReviewsByProduct, getAllReviews, deleteReview };
