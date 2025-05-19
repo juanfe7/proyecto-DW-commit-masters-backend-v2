@@ -3,9 +3,9 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 const { db } = require('./config/firebase');
-const express = require('express');
-const cors = require('cors');
-const app = express();
+const express = require('express');// Permite crear aplicaciones web y APIs
+const cors = require('cors');// Permite el intercambio de recursos entre diferentes dominios
+const app = express();// Inicializa la aplicación Express
 const productsRoutes = require('./routes/products.routes');
 const loginRoutes = require('./routes/login.routes');
 const ordersRoutes = require('./routes/orders.routes');
@@ -13,10 +13,9 @@ const reviewsRoutes = require('./routes/reviews.routes');
 const notificationsRoutes = require('./routes/notifications.routes');
 
 
-
+// Verifica si las variables de entorno necesarias están definidas
 console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID);
 console.log('FIREBASE_PRIVATE_KEY (primeros 20 chars):', process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.substring(0, 20) : 'undefined');
-// Imprime otras variables clave también
 
 
 // Middleware

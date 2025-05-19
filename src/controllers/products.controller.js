@@ -61,7 +61,7 @@ const createProduct = async (req, res) => {
     const nextId = maxId + 1;
 
     const newProduct = {
-      id: nextId, // 👈 ID numérico secuencial
+      id: nextId, // ID único del producto
       name,
       price,
       stock,
@@ -70,7 +70,7 @@ const createProduct = async (req, res) => {
       image
     };
 
-    const docRef = await db.collection('products').add(newProduct);
+    const docRef = await db.collection('products').add(newProduct);// Agregar el nuevo producto a la colección 'products'
 
     res.status(201).json({ message: 'Producto creado', id: docRef.id });
   } catch (error) {
@@ -112,8 +112,7 @@ const getProductById = async (req, res) => {
 
 const updateProduct = async (req, res) => {
   const { id } = req.params; // El 'id' que viene en la URL
-  const updates = req.body; // Los campos a actualizar vendrán en el cuerpo de la petición
-
+  const updates = req.body; 
   try {
     // Convertir el id del parámetro a número para la búsqueda
     const productIdToFind = parseInt(id);

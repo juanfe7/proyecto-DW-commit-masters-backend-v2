@@ -1,5 +1,7 @@
-const admin = require('firebase-admin');
+const admin = require('firebase-admin');// Permite la inicialización de Firebase Admin SDK
 
+//variables de entorno
+// Se utilizan para almacenar información sensible y de configuración
 const serviceAccount = {
   type: process.env.FIREBASE_TYPE,
   project_id: process.env.FIREBASE_PROJECT_ID,
@@ -14,9 +16,11 @@ const serviceAccount = {
   universe_domain: process.env.FIREBASE_UNIVERSE_DOMAIN,
 };
 
+// Inicializa la aplicación de Firebase Admin con las credenciales del servicio
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
+// Inicializa Firestore
 const db = admin.firestore();
 module.exports = { db };

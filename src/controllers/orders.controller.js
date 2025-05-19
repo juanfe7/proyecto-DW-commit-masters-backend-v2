@@ -5,7 +5,7 @@ const createOrder = async (req, res) => {
   const email = req.user.email;
   const name = req.user.name;
 
-  if (!products || !Array.isArray(products)) {
+  if (!products || !Array.isArray(products)) {// Verificar si products es un array
     return res.status(400).json({ message: 'Datos incompletos' });
   }
 
@@ -16,12 +16,12 @@ const createOrder = async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
-    const userDoc = userSnapshot.docs[0];
-    const userData = userDoc.data();
+    const userDoc = userSnapshot.docs[0];// Obtener el primer documento que coincide con la consulta
+    const userData = userDoc.data();// Obtener los datos del usuario
 
 
     let total = 0;
-    const batch = db.batch(); // Usamos batch para hacer updates seguros
+    const batch = db.batch(); // Crear un batch para realizar múltiples operaciones atómicas
     const detailedProducts = [];
 
     for (const item of products) {
@@ -46,8 +46,8 @@ const createOrder = async (req, res) => {
       total += data.price * quantity;
 
       // Restar stock (en batch)
-      const productRef = db.collection('products').doc(doc.id);
-      batch.update(productRef, { stock: data.stock - quantity });
+      const productRef = db.collection('products').doc(doc.id);// Obtener la referencia al documento del producto
+      batch.update(productRef, { stock: data.stock - quantity });// Actualizar el stock del producto
 
       detailedProducts.push({
         id: data.id,
@@ -98,8 +98,9 @@ const getAllOrders = async (req, res) => {
   const { status } = req.query;
 
   try {
-    let query = db.collection('orders').orderBy('createdAt', 'desc');
-
+    let query = db.collection('orders').orderBy('createdAt', 'desc');// Ordenar por fecha de creación
+    
+    // Si se especificó el estado, agregarlo a la consulta
     if (status) {
       query = query.where('status', '==', status);
     }
@@ -110,7 +111,7 @@ const getAllOrders = async (req, res) => {
       return res.status(404).json({ message: 'No se encontraron órdenes' });
     }
 
-    const orders = snapshot.docs.map(doc => ({
+    const orders = snapshot.docs.map(doc => ({// Obtener los documentos y mapearlos a un formato más manejable
       id: doc.id,
       ...doc.data()
     }));
@@ -127,12 +128,12 @@ const getAllOrders = async (req, res) => {
 const getOrderStatus = async (req, res) => {
   const orderId = req.params.id;
 
-  if (!orderId || orderId.trim() === '') {
+  if (!orderId || orderId.trim() === '') {// Verificar si el ID de la orden es válido
     return res.status(400).json({ message: 'ID de orden inválido' });
   }
 
   try {
-    const orderRef = db.collection('orders').doc(orderId);
+    const orderRef = db.collection('orders').doc(orderId);//
     const orderSnap = await orderRef.get();
 
     if (!orderSnap.exists) {
@@ -150,10 +151,10 @@ const getOrderStatus = async (req, res) => {
 
 const getOrders = async (req, res) => {
   const { email } = req.user;
-  const { status } = req.query;
+  const { status } = req.query;// Obtener el estado de la orden desde los parámetros de la consulta
 
   try {
-    let query = db.collection('orders').where('email', '==', email);
+    let query = db.collection('orders').where('email', '==', email);// Filtrar por email
 
     query = query.orderBy('createdAt', 'desc');
 
@@ -167,7 +168,8 @@ const getOrders = async (req, res) => {
     if (ordersSnapshot.empty) {
       return res.status(404).json({ message: 'No se encontraron órdenes' });
     }
-
+    
+    // Mapear los documentos a un formato más manejable
     const orders = ordersSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -183,7 +185,7 @@ const getOrders = async (req, res) => {
 
 
 const updateOrderStatus = async (req, res) => {
-  const orderId = req.params.id;
+  const orderId = req.params.id;// Obtener el ID de la orden desde los parámetros de la solicitud
   const { status } = req.body;
 
   if (!status) {

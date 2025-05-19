@@ -43,10 +43,10 @@ const createReview = async (req, res) => {
   }
 };
 
-
+// Obtener reseñas por ID de producto
 const getReviewsByProduct = async (req, res) => {
   try {
-    const { docId } = req.params;
+    const { docId } = req.params;// Obtener el ID del producto desde los parámetros de la solicitud
 
     if (!docId) {
       return res.status(400).json({ message: 'Se requiere el ID del producto' });
@@ -69,6 +69,7 @@ const getReviewsByProduct = async (req, res) => {
   }
 };
 
+// Obtener todas las reseñas, sin importar el email
 const getAllReviews = async (req, res) => {
   try {
     const snapshot = await db.collection('reviews').orderBy('createdAt', 'desc').get();
@@ -77,6 +78,7 @@ const getAllReviews = async (req, res) => {
       return res.status(404).json({ message: 'No se encontraron reseñas' });
     }
 
+    // Mapear los documentos a un formato más manejable
     const reviews = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -95,7 +97,7 @@ const deleteReview = async (req, res) => {
 
   try {
     const reviewRef = db.collection('reviews').doc(docId);
-    const reviewSnap = await reviewRef.get();
+    const reviewSnap = await reviewRef.get();// Obtener la referencia al documento de la reseña
 
     if (!reviewSnap.exists) {
       return res.status(404).json({ message: 'Reseña no encontrada' });

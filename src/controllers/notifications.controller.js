@@ -1,17 +1,17 @@
 const { db } = require('../config/firebase');
 
-// GET - obtener notificaciones del usuario
+
 const getNotifications = async (req, res) => {
   try {
-    const email = req.user.email;
+    const email = req.user.email;// Obtener el email del usuario autenticado desde el token JWT
     const snapshot = await db.collection('notifications')
       .where('email', '==', email)
       .orderBy('createdAt', 'desc')
       .get();
 
-    const notifications = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
+    const notifications = snapshot.docs.map(doc => ({// Mapear los documentos a un formato más manejable
+      id: doc.id,// ID de la notificación
+      ...doc.data()// Obtener los datos de la notificación
     }));
 
     res.status(200).json(notifications);
@@ -21,7 +21,7 @@ const getNotifications = async (req, res) => {
   }
 };
 
-// POST - crear notificación
+
 const createNotification = async (req, res) => {
   try {
     const { email, message } = req.body;
@@ -37,7 +37,7 @@ const createNotification = async (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    await db.collection('notifications').add(newNotification);
+    await db.collection('notifications').add(newNotification);// Agregar la nueva notificación a la colección 'notifications'
 
     res.status(201).json({ message: 'Notificación creada' });
   } catch (error) {
@@ -50,9 +50,13 @@ const createNotification = async (req, res) => {
 // PATCH - marcar como leída
 const markAsRead = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params;// Obtener el ID de la notificación desde los parámetros de la solicitud
 
-    const ref = db.collection('notifications').doc(id);
+    if (!id) {
+      return res.status(400).json({ message: 'ID de notificación requerido' });
+    }
+
+    const ref = db.collection('notifications').doc(id);// Obtener la referencia al documento de la notificación
     await ref.update({ read: true });
 
     res.status(200).json({ message: 'Notificación marcada como leída' });
